@@ -3,8 +3,8 @@ const imageUpload = document.getElementById("image-upload");
 const applyBgButton = document.getElementById("apply-bg");
 const downloadButton = document.getElementById("download-pdf");
 
-let pdfDoc = null;
-let bgImage = null;
+let pdfDoc = null; // Documento PDF cargado
+let bgImage = null; // Imagen de fondo cargada
 
 // Cargar PDF
 pdfUpload.addEventListener("change", async (event) => {
@@ -27,7 +27,7 @@ imageUpload.addEventListener("change", async (event) => {
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    bgImage = e.target.result;
+    bgImage = e.target.result; // Base64 de la imagen
     alert("Imagen de fondo cargada correctamente.");
   };
   reader.readAsDataURL(file);
@@ -43,6 +43,7 @@ applyBgButton.addEventListener("click", async () => {
   const imageBytes = await fetch(bgImage).then((res) => res.arrayBuffer());
   const imgType = bgImage.startsWith("data:image/png") ? "png" : "jpg";
 
+  // Embedir la imagen como fondo
   const embedImage =
     imgType === "png"
       ? await pdfDoc.embedPng(imageBytes)
@@ -57,7 +58,7 @@ applyBgButton.addEventListener("click", async () => {
       y: 0,
       width,
       height,
-      opacity: 0.5, // Ajustar transparencia para no tapar texto
+      opacity: 0.5, // Cambiar opacidad si es necesario
     });
   });
 
