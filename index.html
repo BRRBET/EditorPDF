@@ -3,33 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDF Editor</title>
+  <title>Editor de PDF Gratis</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
+      background-color: #f5f5f5;
       margin: 0;
       padding: 0;
-      background-color: #f5f5f5;
     }
     header {
       background-color: #6200ea;
       color: white;
-      padding: 1em;
+      padding: 1rem;
     }
     main {
-      padding: 2em;
+      padding: 2rem;
     }
     .file-input {
-      margin: 1em 0;
+      margin: 1rem 0;
     }
     canvas {
-      margin: 1em auto;
+      margin: 1rem auto;
       display: block;
       border: 1px solid #ccc;
     }
     .controls {
-      margin-top: 1em;
+      margin-top: 1rem;
     }
     button {
       padding: 10px 20px;
@@ -47,16 +47,17 @@
 </head>
 <body>
   <header>
-    <h1>PDF Editor Gratis</h1>
+    <h1>Editor de PDF Gratis</h1>
   </header>
   <main>
-    <input type="file" class="file-input" id="pdf-upload" accept="application/pdf" />
+    <input type="file" id="pdf-upload" class="file-input" accept="application/pdf" />
     <canvas id="pdf-canvas"></canvas>
     <div class="controls">
       <button id="change-bg">Cambiar Fondo</button>
       <button id="download-pdf">Descargar PDF</button>
     </div>
   </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
