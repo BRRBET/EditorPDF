@@ -23,11 +23,6 @@
     .file-input {
       margin: 1rem 0;
     }
-    canvas {
-      margin: 1rem auto;
-      display: block;
-      border: 1px solid #ccc;
-    }
     .controls {
       margin-top: 1rem;
     }
@@ -51,9 +46,9 @@
   </header>
   <main>
     <input type="file" id="pdf-upload" class="file-input" accept="application/pdf" />
-    <canvas id="pdf-canvas"></canvas>
+    <input type="file" id="image-upload" class="file-input" accept="image/*" />
     <div class="controls">
-      <button id="change-bg">Cambiar Fondo</button>
+      <button id="apply-bg">Aplicar Fondo</button>
       <button id="download-pdf">Descargar PDF</button>
     </div>
   </main>
