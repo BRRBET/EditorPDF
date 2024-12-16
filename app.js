@@ -1,44 +1,80 @@
 const pdfUpload = document.getElementById("pdf-upload");
-const pdfCanvas = document.getElementById("pdf-canvas");
-const changeBgButton = document.getElementById("change-bg");
+const imageUpload = document.getElementById("image-upload");
+const applyBgButton = document.getElementById("apply-bg");
 const downloadButton = document.getElementById("download-pdf");
-const ctx = pdfCanvas.getContext("2d");
-let pdfDoc = null;
 
+let pdfDoc = null;
+let bgImage = null;
+
+// Cargar PDF
 pdfUpload.addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js");
-  const fileReader = new FileReader();
-  
-  fileReader.onload = async (e) => {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
     const pdfData = new Uint8Array(e.target.result);
-    pdfDoc = await pdfjsLib.getDocument(pdfData).promise;
-
-    const page = await pdfDoc.getPage(1);
-    const viewport = page.getViewport({ scale: 1.5 });
-
-    pdfCanvas.width = viewport.width;
-    pdfCanvas.height = viewport.height;
-
-    await page.render({
-      canvasContext: ctx,
-      viewport: viewport,
-    }).promise;
+    pdfDoc = await PDFLib.PDFDocument.load(pdfData);
+    alert("PDF cargado correctamente.");
   };
-
-  fileReader.readAsArrayBuffer(file);
+  reader.readAsArrayBuffer(file);
 });
 
-changeBgButton.addEventListener("click", () => {
-  ctx.fillStyle = "lightblue"; // Cambia el color según lo deseado
-  ctx.fillRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+// Cargar imagen de fondo
+imageUpload.addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    bgImage = e.target.result;
+    alert("Imagen de fondo cargada correctamente.");
+  };
+  reader.readAsDataURL(file);
 });
 
-downloadButton.addEventListener("click", () => {
+// Aplicar fondo al PDF
+applyBgButton.addEventListener("click", async () => {
+  if (!pdfDoc || !bgImage) {
+    alert("Debes cargar un PDF y una imagen de fondo primero.");
+    return;
+  }
+
+  const imageBytes = await fetch(bgImage).then((res) => res.arrayBuffer());
+  const imgType = bgImage.startsWith("data:image/png") ? "png" : "jpg";
+
+  const embedImage =
+    imgType === "png"
+      ? await pdfDoc.embedPng(imageBytes)
+      : await pdfDoc.embedJpg(imageBytes);
+
+  const pages = pdfDoc.getPages();
+
+  pages.forEach((page) => {
+    const { width, height } = page.getSize();
+    page.drawImage(embedImage, {
+      x: 0,
+      y: 0,
+      width,
+      height,
+      opacity: 0.5, // Ajustar transparencia para no tapar texto
+    });
+  });
+
+  alert("Fondo aplicado con éxito.");
+});
+
+// Descargar PDF modificado
+downloadButton.addEventListener("click", async () => {
+  if (!pdfDoc) {
+    alert("No hay PDF para descargar.");
+    return;
+  }
+
+  const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const link = document.createElement("a");
-  link.href = pdfCanvas.toDataURL("image/png");
-  link.download = "edited-pdf.png";
+  link.href = URL.createObjectURL(blob);
+  link.download = "PDF-con-fondo.pdf";
   link.click();
 });
