@@ -1,12 +1,12 @@
 const pdfUpload = document.getElementById("pdf-upload");
-const imageUpload = document.getElementById("image-upload");
+const bgPdfUpload = document.getElementById("bg-pdf-upload");
 const applyBgButton = document.getElementById("apply-bg");
 const downloadButton = document.getElementById("download-pdf");
 
-let pdfDoc = null; // Documento PDF cargado
-let bgImage = null; // Imagen de fondo cargada
+let pdfDoc = null; // Documento PDF principal
+let bgPdfDoc = null; // Documento PDF de fondo
 
-// Cargar PDF
+// Cargar PDF principal
 pdfUpload.addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -15,52 +15,50 @@ pdfUpload.addEventListener("change", async (event) => {
   reader.onload = async (e) => {
     const pdfData = new Uint8Array(e.target.result);
     pdfDoc = await PDFLib.PDFDocument.load(pdfData);
-    alert("PDF cargado correctamente.");
+    alert("PDF principal cargado correctamente.");
   };
   reader.readAsArrayBuffer(file);
 });
 
-// Cargar imagen de fondo
-imageUpload.addEventListener("change", async (event) => {
+// Cargar PDF de fondo
+bgPdfUpload.addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    bgImage = e.target.result; // Base64 de la imagen
-    alert("Imagen de fondo cargada correctamente.");
+    const bgPdfData = new Uint8Array(e.target.result);
+    bgPdfDoc = await PDFLib.PDFDocument.load(bgPdfData);
+    alert("PDF de fondo cargado correctamente.");
   };
-  reader.readAsDataURL(file);
+  reader.readAsArrayBuffer(file);
 });
 
-// Aplicar fondo al PDF
+// Aplicar fondo al PDF principal
 applyBgButton.addEventListener("click", async () => {
-  if (!pdfDoc || !bgImage) {
-    alert("Debes cargar un PDF y una imagen de fondo primero.");
+  if (!pdfDoc || !bgPdfDoc) {
+    alert("Debes cargar ambos PDFs primero.");
     return;
   }
 
-  const imageBytes = await fetch(bgImage).then((res) => res.arrayBuffer());
-  const imgType = bgImage.startsWith("data:image/png") ? "png" : "jpg";
-
-  // Embedir la imagen como fondo
-  const embedImage =
-    imgType === "png"
-      ? await pdfDoc.embedPng(imageBytes)
-      : await pdfDoc.embedJpg(imageBytes);
-
   const pages = pdfDoc.getPages();
+  const bgPages = bgPdfDoc.getPages();
 
-  pages.forEach((page) => {
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    const bgPage = bgPages[i % bgPages.length]; // Repetir el fondo si tiene menos páginas
+
     const { width, height } = page.getSize();
-    page.drawImage(embedImage, {
+    const bgPageRef = await pdfDoc.embedPage(bgPage);
+
+    // Dibujar la página de fondo debajo del contenido
+    page.drawPage(bgPageRef, {
       x: 0,
       y: 0,
-      width,
-      height,
-      opacity: 0.5, // Cambiar opacidad si es necesario
+      width: width,
+      height: height,
     });
-  });
+  }
 
   alert("Fondo aplicado con éxito.");
 });
