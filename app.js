@@ -5,6 +5,7 @@ const downloadButton = document.getElementById("download-pdf");
 
 let pdfDoc = null; // Documento PDF principal
 let bgPdfDoc = null; // Documento PDF de fondo
+let modifiedPdfDoc = null; // Documento PDF modificado
 
 // Cargar PDF principal
 pdfUpload.addEventListener("change", async (event) => {
@@ -41,18 +42,35 @@ applyBgButton.addEventListener("click", async () => {
     return;
   }
 
+  // Crear una nueva copia del PDF principal para modificar
+  modifiedPdfDoc = await PDFLib.PDFDocument.create();
+
   const pages = pdfDoc.getPages();
   const bgPages = bgPdfDoc.getPages();
 
+  // Iterar por las páginas del PDF principal
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i];
-    const bgPage = bgPages[i % bgPages.length]; // Repetir el fondo si tiene menos páginas
-
     const { width, height } = page.getSize();
-    const bgPageRef = await pdfDoc.embedPage(bgPage);
 
-    // Dibujar la página de fondo debajo del contenido
-    page.drawPage(bgPageRef, {
+    // Usar la página de fondo correspondiente (repetir si es necesario)
+    const bgPageIndex = i % bgPages.length;
+    const bgPage = await modifiedPdfDoc.embedPage(bgPages[bgPageIndex]);
+
+    // Crear una nueva página en el PDF modificado
+    const newPage = modifiedPdfDoc.addPage([width, height]);
+
+    // Dibujar la página de fondo
+    newPage.drawPage(bgPage, {
+      x: 0,
+      y: 0,
+      width: width,
+      height: height,
+    });
+
+    // Dibujar el contenido del PDF original sobre el fondo
+    const pageContents = await pdfDoc.embedPage(page);
+    newPage.drawPage(pageContents, {
       x: 0,
       y: 0,
       width: width,
@@ -65,12 +83,12 @@ applyBgButton.addEventListener("click", async () => {
 
 // Descargar PDF modificado
 downloadButton.addEventListener("click", async () => {
-  if (!pdfDoc) {
-    alert("No hay PDF para descargar.");
+  if (!modifiedPdfDoc) {
+    alert("Primero aplica el fondo.");
     return;
   }
 
-  const pdfBytes = await pdfDoc.save();
+  const pdfBytes = await modifiedPdfDoc.save();
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
